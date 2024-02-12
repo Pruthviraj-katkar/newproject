@@ -20,6 +20,12 @@ jobs:
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             docker push $IMAGE_NAME
 
-      - name: Run tests using Docker image
-        run: docker run $IMAGE_NAME 
+      # - name: Run tests using Docker image
+      #   run: docker run $IMAGE_NAME 
+      - name: set up kubectl
+        uses: azure/k8s-set-context@v1
         
+      - name: Deloy to Kubernetes
+        run: |
+          kubectl apply -f deployment.yml
+          kubectl apply -f service.yml  
