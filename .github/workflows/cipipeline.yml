@@ -19,21 +19,37 @@ jobs:
             docker build -t $IMAGE_NAME .
             docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             docker push $IMAGE_NAME
-
-     
-      - name: set up kinD (Kubernetes in docker)
-        uses: helm/kind-action@v1
-        with: 
-          version: latest
-          node_image: kindest/node:v1.21.1
         
+      - name: Start minikube
+        uses: medyagh/setup-minikube@master
 
-      # - name: Set up minikube
-      #   run: |
-      #     curl LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
-      #     sudo dpkg -i minikube_latest_amd64.deb
+      - name: Try the cluster !
+        run: kubectl get pods -A
 
-      - name: Deloy to Kubernetes
-        run: |
+      - name: Deploy to minikube
+        run:
           kubectl apply -f deployment.yml
-          kubectl apply -f service.yml  
+ 
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+      
+      - name: Expose to service
+        run:
+          kubectl apply -f service.yml
+ 
+      - name: Sleep for 30 seconds
+        run: sleep 30s
+        shell: bash
+
+      - name: Test service URLs
+        run: |
+          kubectl get services
+          kubectl get deployments
+          kubectl get pods
+ 
+          url=$(minikube service my-appservice --url)
+ 
+          curl $url
+          curl $url/ping
+          curl $url/healthz
